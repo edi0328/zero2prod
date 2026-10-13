@@ -1,33 +1,40 @@
-# Learning Backend Development in Rust
+# zero2prod
 
-This repository documents my journey in learning **backend development with Rust**, guided by the book  
-[**Zero To Production in Rust**](https://www.zero2prod.com/).  
+A newsletter API built while working through [Zero to Production in Rust](https://www.zero2prod.com/). Uses Actix Web, PostgreSQL, and SQLx.
 
-The goal of this project is to **build a production-grade web service** while exploring the Rust ecosystem,  
-modern backend practices, and tools for reliability and performance.
+## Current scope
 
----
+- `GET /health_check` returns an empty successful response
+- `POST /subscriptions` accepts a name and email as form data and stores them in PostgreSQL
+- Integration tests cover the health check, stored subscriptions, and missing fields
+- Configuration comes from YAML files and `APP_` environment variables
+- Request and database operations use tracing
 
-## What I’m Learning
-- Fundamentals of **Rust for backend systems**
-- **HTTP APIs** with [actix-web](https://actix.rs/)
-- **Database access** with [SQLx](https://github.com/launchbadge/sqlx)
-- **Migrations** with [sqlx-cli](https://github.com/launchbadge/sqlx/tree/main/sqlx-cli)
-- **Testing** (integration & unit) in Rust
-- **Error handling** and resilience patterns
-- **Logging & observability** with [tracing](https://github.com/tokio-rs/tracing)
-- **Continuous integration** with GitHub Actions
-- **Deployment** to [DigitalOcean](https://www.digitalocean.com/) using Docker and automated pipelines
-- **Transactional email delivery** via [Postmark](https://postmarkapp.com/)
+Email delivery and subscription confirmation are not implemented yet.
 
-## Tools & Dependencies
-- [Rust](https://www.rust-lang.org/) (latest stable)
-- [Cargo](https://doc.rust-lang.org/cargo/) for package management
-- [Actix Web](https://actix.rs/) for the web framework
-- [SQLx](https://github.com/launchbadge/sqlx) for async database access
-- [PostgreSQL](https://www.postgresql.org/) as the database
-- [Docker](https://www.docker.com/) for containerization
-- [Trunk / cargo-watch](https://crates.io/crates/cargo-watch) for live reload during development
-- [GitHub Actions](https://github.com/features/actions) for CI/CD
-- [DigitalOcean](https://www.digitalocean.com/) for hosting and deployment
-- [Postmark](https://postmarkapp.com/) for reliable email delivery
+## Run locally
+
+Install Rust with edition 2024 support, Docker, PostgreSQL client tools, and SQLx CLI. On Linux, the Cargo configuration also requires `clang` and `lld`.
+
+```bash
+cargo install sqlx-cli --version '~0.8' --no-default-features --features rustls,postgres
+./scripts/init_db.sh
+export DATABASE_URL=postgres://postgres:password@localhost:5432/newsletter
+cargo run
+```
+
+The API listens on http://127.0.0.1:8000 with the default local configuration.
+
+```bash
+curl -i http://127.0.0.1:8000/health_check
+curl -i http://127.0.0.1:8000/subscriptions \
+  --data 'name=Edison&email=edison@example.com'
+```
+
+Run `cargo test` with PostgreSQL running. Tests create a separate database for each application instance, so the database user needs permission to create databases.
+
+To reuse an existing PostgreSQL server, set `SKIP_DOCKER=true` when running `scripts/init_db.sh`. Match any custom database settings in `configuration/` or through variables such as `APP_DATABASE__PORT`.
+
+## Repository
+
+Routes are in `src/routes`, schema changes in `migrations`, and integration tests in `tests`. Docker and deployment configuration are included. The main Rust workflow currently targets `root-chapter-03-part1` rather than `main`.
